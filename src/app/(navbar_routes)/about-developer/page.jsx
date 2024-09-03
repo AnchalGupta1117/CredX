@@ -3,21 +3,25 @@ import { ThemeContext } from "@/context/theme"
 import Image from "next/image"
 import React, { useContext } from "react"
 import AnchalPfp from "../../../../public/Anchal.jpg"
-
+ 
 export default function AboutDeveloper() {
   const { isLightTheme } = useContext(ThemeContext)
   const textColor = isLightTheme ? "black" : "white"
-
+ 
   return (
     <div className={`p-5 px-20 w-full text-${textColor} flex items-center `}>
       <div className="w-[490px] flex flex-col items-center p-5 gap-5">
-        <Image
-          className={`rounded-full min-w-[350px] h-[350px] border-2 border-${textColor}`}
-          alt="Anchal pfp"
-          src={AnchalPfp}
-          width={350}
-          height={350}
-        />
+        <div
+          className={`w-[300px] rounded-full h-[300px] border-2 border-${textColor} relative overflow-hidden`}
+        >
+          <Image
+            className="object-cover object-top"
+            alt="Anchal pfp"
+            src={AnchalPfp}
+            quality={100}
+            fill
+          />
+        </div>
         <span className={`font-bold text-xl`} style={{ color: textColor }}>
           Anchal Gupta
         </span>

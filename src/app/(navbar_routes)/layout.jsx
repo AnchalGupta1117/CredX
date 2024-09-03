@@ -34,7 +34,7 @@ export default function Layout({ children }) {
       <ThemeProvider theme={darkTheme}>
         <div className="h-full flex w-full">
           <Sidebar />
-          {children}
+          <div className="h-full overflow-y-auto">{children}</div>
         </div>
       </ThemeProvider>
     </>
