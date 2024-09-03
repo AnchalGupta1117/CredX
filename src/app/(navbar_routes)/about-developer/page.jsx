@@ -9,7 +9,7 @@ export default function AboutDeveloper() {
   const textColor = isLightTheme ? "black" : "white"
  
   return (
-    <div className={`p-5 px-20 w-full text-${textColor} flex items-center `}>
+    <div className={`p-5 px-20 w-full h-full text-${textColor} flex items-center `}>
       <div className="w-[490px] flex flex-col items-center p-5 gap-5">
         <div
           className={`w-[300px] rounded-full h-[300px] border-2 border-${textColor} relative overflow-hidden`}
