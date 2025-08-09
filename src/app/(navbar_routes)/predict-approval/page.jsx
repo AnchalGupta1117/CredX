@@ -37,24 +37,63 @@ export default function PredictApproval() {
     try {
       setButtonDisabled(true)
       setIsPredicting(true)
-      console.log("Started")
-      console.log(Object.values(input))
-      const res = await axios.post(
+      console.log("Prediction started")
+      console.log("Input values:", Object.values(input))
+      console.log("Input object:", input)
+      
+      // Try remote backend first, then fallback to local
+      const backends = [
         "https://credx-backend.onrender.com/predict",
-        Object.values(input),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
+        "http://localhost:3001/predict"
+      ];
+      
+      let res;
+      let lastError;
+      
+      for (const backendUrl of backends) {
+        try {
+          console.log(`Trying backend: ${backendUrl}`)
+          res = await axios.post(
+            backendUrl,
+            Object.values(input),
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              timeout: 15000, // 15 second timeout per attempt
+            }
+          )
+          console.log(`Success with backend: ${backendUrl}`)
+          break;
+        } catch (err) {
+          console.log(`Failed with backend ${backendUrl}:`, err.message)
+          lastError = err;
+          continue;
         }
-      )
+      }
+      
+      if (!res) {
+        throw lastError || new Error("All backends failed");
+      }
+      
+      console.log("API Response:", res.data)
       setPrediction(res.data.prediction)
       setProbability(res.data.probability)
-      console.log({ res })
+      
     } catch (error) {
-      console.log({ error })
+      console.error("Prediction error:", error)
+      console.error("Error response:", error.response?.data)
+      
+      // Show user-friendly error message
+      if (error.code === 'ECONNABORTED') {
+        alert("Request timed out. Backend server might be slow or down.")
+      } else if (error.code === 'ERR_NETWORK') {
+        alert("Network error. Please check your internet connection.")
+      } else {
+        alert(`Prediction failed: ${error.message}. Check console for details.`)
+      }
     } finally {
-      console.log("Ended")
+      console.log("Prediction ended")
       setButtonDisabled(false)
       setIsPredicting(false)
     }
@@ -75,17 +114,24 @@ export default function PredictApproval() {
   }, [])
 
   useEffect(() => {
-    if (
-      input.income &&
-      input.totalFamilyMembers &&
-      input.workingExperience &&
-      input.age &&
-      (input.totalBadDebt || input.totalBadDebt == 0)
-    ) {
-      setButtonDisabled(false)
-    } else {
-      setButtonDisabled(true)
-    }
+    // Check if all required fields are filled
+    const requiredFieldsFilled = 
+      input.income !== undefined && input.income !== "" &&
+      input.totalFamilyMembers !== undefined && input.totalFamilyMembers !== "" &&
+      input.workingExperience !== undefined && input.workingExperience !== "" &&
+      input.age !== undefined && input.age !== "" &&
+      (input.totalBadDebt !== undefined && input.totalBadDebt !== "");
+    
+    console.log("Validation check:", {
+      income: input.income,
+      totalFamilyMembers: input.totalFamilyMembers,
+      workingExperience: input.workingExperience,
+      age: input.age,
+      totalBadDebt: input.totalBadDebt,
+      requiredFieldsFilled
+    });
+    
+    setButtonDisabled(!requiredFieldsFilled);
   }, [input])
 
   return (

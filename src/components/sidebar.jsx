@@ -60,11 +60,15 @@ export default function Sidebar() {
         <div
           className={`${textColor} mt-12 w-full flex flex-col gap-5 text-sm`}
         >
-          <div className="flex items-center gap-3 hover:cursor-pointer hover:text-[15px]">
+          <a 
+            href="https://github.com/AnchalGupta1117/CredX" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 hover:cursor-pointer hover:text-[15px] transition-all duration-200"
+          >
             <GithubLogo color={iconColor} />
-
             <span>Source code</span>
-          </div>
+          </a>
           <div className="flex items-center gap-3 ">
             <Sun color={iconColor} />
             <span className="text-sm">Light Mode</span>

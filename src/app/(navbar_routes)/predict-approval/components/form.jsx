@@ -284,6 +284,7 @@ export default function Form({
         isLightTheme={isLightTheme}
         clickFunction={predictApproval}
         disabled={buttonDisabled}
+        isLoading={isPredicting}
         width="100%"
         height="40px"
         buttonText={isPredicting ? "Predicting..." : "Predict"}

@@ -30,9 +30,9 @@ export default function AboutDeveloper() {
         <span className="font-bold text-xl">
           Hii. I am Anchal Gupta, currently completing my graduation from &quot;
           Indira Gandhi Delhi Technical University for Women&quot; . I am
-          pursuing B.Tech in Information Technology. I am a programming
+          pursuing B.Tech in Computer Science and Engineering. I am a programming
           enthusiast and currently do web development and Machine learning with
-          python
+          python.
         </span>
       </div>
     </div>
