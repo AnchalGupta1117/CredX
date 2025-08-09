@@ -147,54 +147,62 @@ export default function PredictApproval() {
           <div className="flex flex-col gap-3 w-full">
             <span className={`text-[32px] font-bold w-full ${
               isLightTheme 
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent" 
-                : "bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent"
+                ? "bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent" 
+                : "bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent"
             }`}>
               Predict Approval
             </span>
             <div className={`w-full h-[3px] rounded-full ${
               isLightTheme 
-                ? "bg-gradient-to-r from-purple-400 to-indigo-400" 
-                : "bg-gradient-to-r from-purple-500 to-indigo-500"
+                ? "bg-gradient-to-r from-purple-500 to-indigo-500" 
+                : "bg-gradient-to-r from-purple-300 to-indigo-300"
             }`}></div>
           </div>
-          <div className="flex w-full gap-8">
-            <Form
-              isPredicting={isPredicting}
-              buttonDisabled={buttonDisabled}
-              predictApproval={predictApproval}
-              input={input}
-              setInput={setInput}
-              textColor={textColor}
-              isLightTheme={isLightTheme}
-            />
+          <div className="flex w-full gap-10 h-full">
+            <div className="w-2/5 h-full flex flex-col">
+              <div className="h-[90%]">
+                <Form
+                  isPredicting={isPredicting}
+                  buttonDisabled={buttonDisabled}
+                  predictApproval={predictApproval}
+                  input={input}
+                  setInput={setInput}
+                  textColor={textColor}
+                  isLightTheme={isLightTheme}
+                />
+              </div>
+            </div>
             <div
-              className={`shadow-black/20 shadow-2xl ${
+              className={`w-3/5 h-full shadow-black/20 shadow-2xl ${
                 isLightTheme 
                   ? "bg-gradient-to-br from-white to-purple-50 border border-purple-200/50" 
                   : "bg-gradient-to-br from-gray-800/50 to-purple-900/30 border border-purple-500/20"
-              } text-${textColor} rounded-2xl w-full flex flex-col items-center justify-between h-full p-5 backdrop-blur-sm`}
+              } text-${textColor} rounded-2xl flex flex-col items-center justify-between p-5 backdrop-blur-sm`}
             >
-              {probability ? (
-                <Result probability={probability} isLightTheme={isLightTheme} />
-              ) : (
-                <ProcessInfo />
-              )}
-              <div className="w-full mt-10 flex flex-col gap-2">
-                <div className="w-full flex justify-between">
-                  <span className="font-bold text-lg w-full">
-                    Some tips to improve your chances:
-                  </span>
-                  <RefreshCcw
-                    className="hover:cursor-pointer"
-                    onClick={getRandomTips}
-                  />
+              <div className="flex flex-col justify-between h-full w-full">
+                <div>
+                  {probability ? (
+                    <Result probability={probability} isLightTheme={isLightTheme} />
+                  ) : (
+                    <ProcessInfo />
+                  )}
                 </div>
-                <div className="w-full h-[2px] bg-[#cfcfcf] rounded-full"></div>
-                <div className="flex flex-col mt-3 gap-3">
-                  {randomTips.map((i, idx) => {
-                    return <span key={idx}> » &nbsp; {i}</span>
-                  })}
+                <div className="w-full mt-10 flex flex-col gap-2">
+                  <div className="w-full flex justify-between">
+                    <span className="font-bold text-lg w-full">
+                      Some tips to improve your chances:
+                    </span>
+                    <RefreshCcw
+                      className="hover:cursor-pointer"
+                      onClick={getRandomTips}
+                    />
+                  </div>
+                  <div className="w-full h-[2px] bg-[#cfcfcf] rounded-full"></div>
+                  <div className="flex flex-col mt-3 gap-3">
+                    {randomTips.map((i, idx) => {
+                      return <span key={idx}> » &nbsp; {i}</span>
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

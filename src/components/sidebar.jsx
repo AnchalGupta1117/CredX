@@ -102,7 +102,7 @@ export default function Sidebar() {
           </a>
           <div className="flex items-center gap-3 ">
             <Sun color={iconColor} />
-            <span className="text-sm">Light Mode</span>
+            <span className="text-sm">Display Mode</span>
             <CustomSwitch
               isLightTheme={isLightTheme}
               updateTheme={updateTheme}
