@@ -40,17 +40,19 @@ export default function PrimaryButton({
             " hover:cursor-default"
           : "hover:cursor-pointer" +
             (isLightTheme ? " hover:bg-[#ad96ff]" : " hover:bg-[#b5a2ff]")) +
-        ` transition-all duration-300 rounded-md flex justify-center text-themesurface items-center font-medium relative overflow-hidden` +
+        ` transition-all duration-300 rounded-lg flex justify-center text-themesurface items-center font-medium relative overflow-hidden shadow-lg hover:shadow-xl` +
         (isLightTheme
-          ? "  bg-[#9479ff] text-white"
-          : "  bg-[#C8BCF6] text-[#09090a]")
+          ? "  bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+          : "  bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600")
       }
     >
       {/* Progress bar that fills from left to right */}
       {isLoading && (
         <div 
-          className={`absolute left-0 top-0 h-full rounded-md transition-all duration-300 ${
-            isLightTheme ? "bg-[#6B4ECC]" : "bg-[#A691E8]"
+          className={`absolute left-0 top-0 h-full rounded-lg transition-all duration-300 ${
+            isLightTheme 
+              ? "bg-gradient-to-r from-purple-800 to-indigo-800" 
+              : "bg-gradient-to-r from-purple-300 to-indigo-300"
           }`}
           style={{
             width: `${progress}%`,

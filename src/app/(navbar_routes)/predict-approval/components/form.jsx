@@ -49,7 +49,11 @@ export default function Form({
   }
 
   return (
-    <div className="flex min-w-[490px] flex-col gap-5">
+    <div className={`flex min-w-[490px] flex-col gap-5 p-6 rounded-2xl backdrop-blur-sm border ${
+      isLightTheme 
+        ? "bg-gradient-to-br from-white/80 to-purple-50/80 border-purple-200/50 shadow-xl" 
+        : "bg-gradient-to-br from-gray-800/50 to-purple-900/30 border-purple-500/20 shadow-2xl"
+    }`}>
       <GenderSelect
         textColor={textColor}
         isLightTheme={isLightTheme}

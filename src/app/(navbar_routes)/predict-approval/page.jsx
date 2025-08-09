@@ -136,15 +136,27 @@ export default function PredictApproval() {
 
   return (
     <>
-      <div className="p-5 px-10 w-full  ">
+      <div className={`p-5 px-10 w-full min-h-screen ${
+        isLightTheme 
+          ? "bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50" 
+          : "bg-gradient-to-br from-gray-900 via-purple-900/20 to-indigo-900/30"
+      }`}>
         <div
           className={`flex flex-col gap-5 h-full text-${textColor} shadow-black/20`}
         >
           <div className="flex flex-col gap-3 w-full">
-            <span className="text-[32px] font-bold w-full">
+            <span className={`text-[32px] font-bold w-full ${
+              isLightTheme 
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent" 
+                : "bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent"
+            }`}>
               Predict Approval
             </span>
-            <div className="w-full h-[2px] bg-[#cfcfcf] rounded-full"></div>
+            <div className={`w-full h-[3px] rounded-full ${
+              isLightTheme 
+                ? "bg-gradient-to-r from-purple-400 to-indigo-400" 
+                : "bg-gradient-to-r from-purple-500 to-indigo-500"
+            }`}></div>
           </div>
           <div className="flex w-full gap-8">
             <Form
@@ -157,7 +169,11 @@ export default function PredictApproval() {
               isLightTheme={isLightTheme}
             />
             <div
-              className={`shadow-black/20 shadow-2xl ${cardBgColor} text-${textColor} rounded-2xl w-full flex flex-col items-center justify-between h-full p-5`}
+              className={`shadow-black/20 shadow-2xl ${
+                isLightTheme 
+                  ? "bg-gradient-to-br from-white to-purple-50 border border-purple-200/50" 
+                  : "bg-gradient-to-br from-gray-800/50 to-purple-900/30 border border-purple-500/20"
+              } text-${textColor} rounded-2xl w-full flex flex-col items-center justify-between h-full p-5 backdrop-blur-sm`}
             >
               {probability ? (
                 <Result probability={probability} isLightTheme={isLightTheme} />
