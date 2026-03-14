@@ -54,12 +54,14 @@ export default function PredictApproval() {
         input.totalBadDebt,
       ]
       
-      // Try configured/remote backend first.
-      // Use localhost fallback only during local development.
+      // Vercel setup: call same-origin serverless API first.
+      // Keep external/local fallback for compatibility.
       const configuredBackend = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
-      const backends = [
-        configuredBackend || "https://credx-backend.onrender.com/predict",
-      ]
+      const backends = ["/api/predict"]
+
+      if (configuredBackend && configuredBackend !== "/api/predict") {
+        backends.push(configuredBackend)
+      }
 
       if (window.location.hostname === "localhost") {
         backends.push("http://localhost:3001/predict")
