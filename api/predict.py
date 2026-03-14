@@ -20,6 +20,15 @@ FEATURE_NAMES = [
     "Total_Bad_Debt",
 ]
 
+CATEGORICAL_FEATURES = [
+    "Applicant_Gender",
+    "Owned_Realty",
+    "Income_Type",
+    "Education_Type",
+    "Housing_Type",
+    "Job_Title",
+]
+
 MODEL = None
 
 
@@ -27,9 +36,18 @@ def get_model():
     global MODEL
     if MODEL is None:
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(base_dir, "..", "backend", "credx_model.pkl")
+        v2_path = os.path.join(base_dir, "..", "backend", "credx_model_v2.pkl")
+        legacy_path = os.path.join(base_dir, "..", "backend", "credx_model.pkl")
+        model_path = v2_path if os.path.exists(v2_path) else legacy_path
         MODEL = joblib.load(model_path)
     return MODEL
+
+
+def create_input_df(values):
+    input_df = pd.DataFrame([values], columns=FEATURE_NAMES)
+    for col in CATEGORICAL_FEATURES:
+        input_df[col] = input_df[col].astype(str)
+    return input_df
 
 
 def get_approved_probability(model, input_df):
@@ -83,6 +101,91 @@ def apply_risk_adjustment(raw_probability, values):
     return float(adjusted)
 
 
+def build_risk_flags(values):
+    total_income = float(values[2])
+    total_family_members = float(values[7])
+    applicant_age = float(values[8])
+    years_of_working = float(values[9])
+    total_bad_debt = float(values[10])
+
+    flags = []
+
+    if total_bad_debt >= 1:
+        flags.append("Bad debt history present")
+    if total_bad_debt >= 5:
+        flags.append("High bad debt count")
+
+    if total_income < 150000:
+        flags.append("Low annual income")
+    if total_income < 80000:
+        flags.append("Very low annual income")
+
+    if years_of_working <= 0:
+        flags.append("No work experience")
+
+    if applicant_age < 21:
+        flags.append("Very young credit profile")
+    if applicant_age > 70:
+        flags.append("Senior age risk profile")
+
+    if total_family_members >= 8:
+        flags.append("Large household size")
+
+    if not flags:
+        flags.append("No major risk flag from rule checks")
+
+    return flags
+
+
+def build_model_directions(model):
+    if hasattr(model, "coef_"):
+        coefficients = model.coef_[0]
+        if len(coefficients) != len(FEATURE_NAMES):
+            return []
+
+        directions = []
+        for feature, coef in zip(FEATURE_NAMES, coefficients):
+            directions.append(
+                {
+                    "feature": feature,
+                    "direction": "increases_approval" if coef >= 0 else "decreases_approval",
+                    "weight": float(coef),
+                }
+            )
+        return directions
+
+    if hasattr(model, "named_steps") and "model" in model.named_steps:
+        estimator = model.named_steps["model"]
+        if not hasattr(estimator, "coef_"):
+            return []
+
+        try:
+            transformed_names = model.named_steps["preprocess"].get_feature_names_out()
+        except Exception:
+            return []
+
+        coefficients = estimator.coef_[0]
+        if len(coefficients) != len(transformed_names):
+            return []
+
+        ranked = sorted(
+            zip(transformed_names, coefficients),
+            key=lambda item: abs(item[1]),
+            reverse=True,
+        )
+
+        return [
+            {
+                "feature": str(feature),
+                "direction": "increases_approval" if coef >= 0 else "decreases_approval",
+                "weight": float(coef),
+            }
+            for feature, coef in ranked[:15]
+        ]
+
+    return []
+
+
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, payload):
         response = json.dumps(payload).encode("utf-8")
@@ -128,10 +231,12 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             model = get_model()
-            input_df = pd.DataFrame([values], columns=FEATURE_NAMES)
+            input_df = create_input_df(values)
             prediction = model.predict(input_df)[0]
             probability = get_approved_probability(model, input_df)
             adjusted_probability = apply_risk_adjustment(probability, values)
+            risk_flags = build_risk_flags(values)
+            model_directions = build_model_directions(model)
 
             self._send_json(
                 200,
@@ -139,6 +244,8 @@ class handler(BaseHTTPRequestHandler):
                     "prediction": str(prediction),
                     "probability": adjusted_probability,
                     "raw_probability": probability,
+                    "risk_flags": risk_flags,
+                    "model_directions": model_directions,
                 },
             )
         except Exception as error:

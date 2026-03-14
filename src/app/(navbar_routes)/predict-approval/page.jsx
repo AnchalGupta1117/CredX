@@ -11,7 +11,6 @@ import ProcessInfo from "./components/process_info"
 export default function PredictApproval() {
   const { isLightTheme } = useContext(ThemeContext)
   const textColor = isLightTheme ? "black" : "white"
-  const cardBgColor = isLightTheme ? "bg-white" : "bg-[#161618]"
 
   const [input, setInput] = useState({
     gender: 0,
@@ -27,7 +26,6 @@ export default function PredictApproval() {
     totalBadDebt: undefined,
   })
 
-  const [prediction, setPrediction] = useState("")
   const [probability, setProbability] = useState("")
   const [buttonDisabled, setButtonDisabled] = useState(false)
   const [isPredicting, setIsPredicting] = useState(false)
@@ -129,16 +127,19 @@ export default function PredictApproval() {
         throw lastError || new Error("All backends failed")
       }
 
-      setPrediction(res.data.prediction)
+      const adjustedFromApi = Number(res.data?.probability)
+      const rawFromApi = Number(res.data?.raw_probability)
 
-      const apiProbability =
-        res.data?.probability !== undefined
-          ? Number(res.data.probability)
-          : Number(res.data?.raw_probability)
-
-      const finalProbability = Number.isFinite(apiProbability)
-        ? applyRiskAdjustment(apiProbability, payload)
-        : ""
+      let finalProbability = ""
+      if (Number.isFinite(adjustedFromApi) && Number.isFinite(rawFromApi)) {
+        // New API already returns adjusted probability.
+        finalProbability = adjustedFromApi
+      } else if (Number.isFinite(adjustedFromApi)) {
+        // Old API returning only one probability.
+        finalProbability = applyRiskAdjustment(adjustedFromApi, payload)
+      } else if (Number.isFinite(rawFromApi)) {
+        finalProbability = applyRiskAdjustment(rawFromApi, payload)
+      }
 
       setProbability(finalProbability)
       
@@ -234,7 +235,10 @@ export default function PredictApproval() {
               <div className="flex flex-col justify-between h-full w-full">
                 <div>
                   {probability ? (
-                    <Result probability={probability} isLightTheme={isLightTheme} />
+                    <Result
+                      probability={probability}
+                      isLightTheme={isLightTheme}
+                    />
                   ) : (
                     <ProcessInfo />
                   )}

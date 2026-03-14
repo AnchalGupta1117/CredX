@@ -10,15 +10,28 @@ input_data = json.loads(sys.argv[1])
 
 # Load the trained model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model = joblib.load(os.path.join(BASE_DIR, 'credx_model.pkl'))
+v2_model_path = os.path.join(BASE_DIR, 'credx_model_v2.pkl')
+legacy_model_path = os.path.join(BASE_DIR, 'credx_model.pkl')
+model = joblib.load(v2_model_path if os.path.exists(v2_model_path) else legacy_model_path)
 
 # Define the feature names as used in training
 feature_names = ['Applicant_Gender', 'Owned_Realty', 'Total_Income', 'Income_Type', 'Education_Type', 
                  'Housing_Type', 'Job_Title', 'Total_Family_Members', 'Applicant_Age', 
                  'Years_of_Working', 'Total_Bad_Debt']
 
+categorical_features = [
+    'Applicant_Gender',
+    'Owned_Realty',
+    'Income_Type',
+    'Education_Type',
+    'Housing_Type',
+    'Job_Title',
+]
+
 # Convert the input data to a DataFrame with the correct feature names
 input_df = pd.DataFrame([input_data], columns=feature_names)
+for col in categorical_features:
+    input_df[col] = input_df[col].astype(str)
 
 # Predict using the trained model
 predictions = model.predict(input_df)
