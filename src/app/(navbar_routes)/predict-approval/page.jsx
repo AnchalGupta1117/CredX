@@ -38,24 +38,42 @@ export default function PredictApproval() {
       setButtonDisabled(true)
       setIsPredicting(true)
       console.log("Prediction started")
-      console.log("Input values:", Object.values(input))
       console.log("Input object:", input)
+
+      const payload = [
+        input.gender,
+        input.ownedRealty,
+        input.income,
+        input.incomeType,
+        input.education,
+        input.housingType,
+        input.jobTitle,
+        input.totalFamilyMembers,
+        input.age,
+        input.workingExperience,
+        input.totalBadDebt,
+      ]
       
-      // Try remote backend first, then fallback to local
+      // Try configured/remote backend first.
+      // Use localhost fallback only during local development.
+      const configuredBackend = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
       const backends = [
-        "https://credx-backend.onrender.com/predict",
-        "http://localhost:3001/predict"
-      ];
+        configuredBackend || "https://credx-backend.onrender.com/predict",
+      ]
+
+      if (window.location.hostname === "localhost") {
+        backends.push("http://localhost:3001/predict")
+      }
       
-      let res;
-      let lastError;
+      let res
+      let lastError
       
       for (const backendUrl of backends) {
         try {
           console.log(`Trying backend: ${backendUrl}`)
           res = await axios.post(
             backendUrl,
-            Object.values(input),
+            payload,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -64,16 +82,16 @@ export default function PredictApproval() {
             }
           )
           console.log(`Success with backend: ${backendUrl}`)
-          break;
+          break
         } catch (err) {
           console.log(`Failed with backend ${backendUrl}:`, err.message)
-          lastError = err;
-          continue;
+          lastError = err
+          continue
         }
       }
       
       if (!res) {
-        throw lastError || new Error("All backends failed");
+        throw lastError || new Error("All backends failed")
       }
       
       console.log("API Response:", res.data)

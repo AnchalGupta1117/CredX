@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-import subprocess
+import os
+import sys
 import json
 from flask_cors import CORS
 from subprocess import Popen, PIPE
@@ -7,19 +8,8 @@ from subprocess import Popen, PIPE
 app = Flask(__name__)
 CORS(app)
 
-# Install dependencies
-def install_dependencies():
-    print("Installing libraries")
-    try:
-        result = subprocess.check_output(
-            ["pip", "install", "numpy", "pandas", "joblib", "scikit-learn"],
-            stderr=subprocess.STDOUT
-        )
-        print(f"Python dependencies installed: {result.decode()}")
-    except subprocess.CalledProcessError as error:
-        print(f"Error installing Python dependencies: {error.output.decode()}")
-
-install_dependencies()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PREDICT_SCRIPT = os.path.join(BASE_DIR, "predict.py")
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -27,30 +17,34 @@ def predict():
     print("Request received")
 
     # Save input data to a temporary file if needed
-    input_json = json.dumps(input_data,separators=(',', ':'))
+    input_json = json.dumps(input_data, separators=(',', ':'))
 
     print(input_json)
 
     try:
         process = Popen(
-            ['python', 'predict.py', input_json],
+            [sys.executable, PREDICT_SCRIPT, input_json],
             stdout=PIPE,
             stderr=PIPE,
+            cwd=BASE_DIR,
             text=True
         )
         stdout, stderr = process.communicate()
-        if stderr:
+        if process.returncode != 0:
             print(f"Error running Python script: {stderr}")
             return jsonify({"prediction": "error predicting results", "stderror": stderr}), 500
 
         print(stdout)
-        # Assuming the prediction is on the third line
-        prediction = stdout.splitlines()[0] if len(stdout.splitlines()) > 1 else "Error"
-        probability = stdout.splitlines()[1] if len(stdout.splitlines()) > 1 else "Error"
-        return jsonify({"prediction": prediction, "probability" : probability})
+        output_lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+        if len(output_lines) < 2:
+            return jsonify({"prediction": "error predicting results", "stderror": "Unexpected predictor output"}), 500
+
+        prediction = output_lines[0]
+        probability = output_lines[1]
+        return jsonify({"prediction": prediction, "probability": probability})
     except Exception as e:
         print(e)
-        return jsonify({"prediction": "error predicting results", "error": e}), 500
+        return jsonify({"prediction": "error predicting results", "error": str(e)}), 500
 
 if __name__ == '__main__':
     port = 3001

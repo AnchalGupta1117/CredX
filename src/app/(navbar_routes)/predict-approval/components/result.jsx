@@ -5,7 +5,6 @@ import CountUp from "react-countup"
 export default function Result({ probability, isLightTheme }) {
   const percentage = Math.floor(parseFloat(probability) * 100)
   const eligible = percentage > 50
-  console.log(percentage)
   let text = ""
   text = eligible
     ? `Yay!! Based on the data you provided, you have ${percentage}% chances of
