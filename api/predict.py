@@ -46,6 +46,43 @@ def get_approved_probability(model, input_df):
     return float(probabilities[approved_idx])
 
 
+def apply_risk_adjustment(raw_probability, values):
+    # values order follows FEATURE_NAMES
+    total_income = float(values[2])
+    applicant_age = float(values[8])
+    years_of_working = float(values[9])
+    total_bad_debt = float(values[10])
+
+    multiplier = 1.0
+
+    # Strongest business signal
+    if total_bad_debt >= 1:
+        multiplier *= 0.75
+    if total_bad_debt >= 3:
+        multiplier *= 0.75
+    if total_bad_debt >= 5:
+        multiplier *= 0.75
+    if total_bad_debt >= 10:
+        multiplier *= 0.65
+
+    # Income effect
+    if total_income < 150000:
+        multiplier *= 0.85
+    if total_income < 80000:
+        multiplier *= 0.8
+
+    # Stability effect
+    if years_of_working <= 0:
+        multiplier *= 0.9
+
+    # Extreme age range effect
+    if applicant_age < 21 or applicant_age > 70:
+        multiplier *= 0.9
+
+    adjusted = max(0.0, min(1.0, raw_probability * multiplier))
+    return float(adjusted)
+
+
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, payload):
         response = json.dumps(payload).encode("utf-8")
@@ -94,12 +131,14 @@ class handler(BaseHTTPRequestHandler):
             input_df = pd.DataFrame([values], columns=FEATURE_NAMES)
             prediction = model.predict(input_df)[0]
             probability = get_approved_probability(model, input_df)
+            adjusted_probability = apply_risk_adjustment(probability, values)
 
             self._send_json(
                 200,
                 {
                     "prediction": str(prediction),
-                    "probability": probability,
+                    "probability": adjusted_probability,
+                    "raw_probability": probability,
                 },
             )
         except Exception as error:

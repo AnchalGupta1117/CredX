@@ -33,12 +33,39 @@ export default function PredictApproval() {
   const [isPredicting, setIsPredicting] = useState(false)
   const [randomTips, setRandomTips] = useState(["", "", "", "", "", "", ""])
 
+  const applyRiskAdjustment = (rawProbability, values) => {
+    const totalIncome = Number(values[2])
+    const applicantAge = Number(values[8])
+    const yearsOfWorking = Number(values[9])
+    const totalBadDebt = Number(values[10])
+
+    let multiplier = 1.0
+
+    if (totalBadDebt >= 1) multiplier *= 0.75
+    if (totalBadDebt >= 3) multiplier *= 0.75
+    if (totalBadDebt >= 5) multiplier *= 0.75
+    if (totalBadDebt >= 10) multiplier *= 0.65
+
+    if (totalIncome < 150000) multiplier *= 0.85
+    if (totalIncome < 80000) multiplier *= 0.8
+
+    if (yearsOfWorking <= 0) multiplier *= 0.9
+    if (applicantAge < 21 || applicantAge > 70) multiplier *= 0.9
+
+    return Math.max(0, Math.min(1, Number(rawProbability) * multiplier))
+  }
+
   const predictApproval = async () => {
     try {
       setButtonDisabled(true)
       setIsPredicting(true)
-      console.log("Prediction started")
-      console.log("Input object:", input)
+
+      if (Number(input.totalBadDebt) > 50) {
+        alert(
+          "Bad Debt Count seems too high. Please enter count of bad debt records (e.g. 0-20), not debt amount."
+        )
+        return
+      }
 
       const payload = [
         input.gender,
@@ -53,6 +80,15 @@ export default function PredictApproval() {
         input.workingExperience,
         input.totalBadDebt,
       ]
+
+      const hasInvalidNumber = payload.some(
+        (value) => value === "" || value === undefined || value === null || Number.isNaN(Number(value))
+      )
+
+      if (hasInvalidNumber) {
+        alert("Please fill all fields with valid numeric values before prediction.")
+        return
+      }
       
       // Vercel setup: call same-origin serverless API first.
       // Keep external/local fallback for compatibility.
@@ -72,7 +108,6 @@ export default function PredictApproval() {
       
       for (const backendUrl of backends) {
         try {
-          console.log(`Trying backend: ${backendUrl}`)
           res = await axios.post(
             backendUrl,
             payload,
@@ -83,10 +118,8 @@ export default function PredictApproval() {
               timeout: 15000, // 15 second timeout per attempt
             }
           )
-          console.log(`Success with backend: ${backendUrl}`)
           break
         } catch (err) {
-          console.log(`Failed with backend ${backendUrl}:`, err.message)
           lastError = err
           continue
         }
@@ -95,10 +128,19 @@ export default function PredictApproval() {
       if (!res) {
         throw lastError || new Error("All backends failed")
       }
-      
-      console.log("API Response:", res.data)
+
       setPrediction(res.data.prediction)
-      setProbability(res.data.probability)
+
+      const apiProbability =
+        res.data?.probability !== undefined
+          ? Number(res.data.probability)
+          : Number(res.data?.raw_probability)
+
+      const finalProbability = Number.isFinite(apiProbability)
+        ? applyRiskAdjustment(apiProbability, payload)
+        : ""
+
+      setProbability(finalProbability)
       
     } catch (error) {
       console.error("Prediction error:", error)
@@ -113,7 +155,6 @@ export default function PredictApproval() {
         alert(`Prediction failed: ${error.message}. Check console for details.`)
       }
     } finally {
-      console.log("Prediction ended")
       setButtonDisabled(false)
       setIsPredicting(false)
     }
@@ -141,16 +182,7 @@ export default function PredictApproval() {
       input.workingExperience !== undefined && input.workingExperience !== "" &&
       input.age !== undefined && input.age !== "" &&
       (input.totalBadDebt !== undefined && input.totalBadDebt !== "");
-    
-    console.log("Validation check:", {
-      income: input.income,
-      totalFamilyMembers: input.totalFamilyMembers,
-      workingExperience: input.workingExperience,
-      age: input.age,
-      totalBadDebt: input.totalBadDebt,
-      requiredFieldsFilled
-    });
-    
+
     setButtonDisabled(!requiredFieldsFilled);
   }, [input])
 

@@ -37,4 +37,35 @@ for idx, cls in enumerate(classes):
         break
 
 probabilities = model.predict_proba(input_df)[:, approved_idx]
-print(float(probabilities[0]))
+raw_probability = float(probabilities[0])
+
+# Risk-adjusted business layer for more intuitive lending outcomes
+total_income = float(input_data[2])
+applicant_age = float(input_data[8])
+years_of_working = float(input_data[9])
+total_bad_debt = float(input_data[10])
+
+multiplier = 1.0
+
+if total_bad_debt >= 1:
+    multiplier *= 0.75
+if total_bad_debt >= 3:
+    multiplier *= 0.75
+if total_bad_debt >= 5:
+    multiplier *= 0.75
+if total_bad_debt >= 10:
+    multiplier *= 0.65
+
+if total_income < 150000:
+    multiplier *= 0.85
+if total_income < 80000:
+    multiplier *= 0.8
+
+if years_of_working <= 0:
+    multiplier *= 0.9
+
+if applicant_age < 21 or applicant_age > 70:
+    multiplier *= 0.9
+
+adjusted_probability = max(0.0, min(1.0, raw_probability * multiplier))
+print(float(adjusted_probability))

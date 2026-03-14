@@ -40,10 +40,11 @@ export default function Form({
   }
 
   const handleChange = (evt) => {
+    const { name, value } = evt.target
     setInput((prev) => {
       return {
         ...prev,
-        [evt.target.name]: parseInt(evt.target.value),
+        [name]: value === "" ? "" : Number(value),
       }
     })
   }
@@ -66,7 +67,8 @@ export default function Form({
           sx={roundEdgesSx}
           InputProps={{
             inputProps: {
-              min: 1,
+              min: 18,
+              max: 100,
             },
           }}
           id="age"
@@ -103,13 +105,14 @@ export default function Form({
           <TextField
             sx={roundEdgesSx}
             id="income"
-            label="Income"
+            label="Annual Income (INR)"
             variant="outlined"
             type="number"
             name="income"
             value={input.income}
             onChange={handleChange}
             placeholder="180000"
+            helperText="Use yearly income amount, e.g. 600000"
             InputProps={{
               inputProps: {
                 min: 0,
@@ -152,6 +155,7 @@ export default function Form({
             InputProps={{
               inputProps: {
                 min: 0,
+                max: 60,
               },
             }}
             id="years-of-working"
@@ -205,17 +209,19 @@ export default function Form({
           InputProps={{
             inputProps: {
               min: 0,
+              max: 50,
             },
           }}
           fullWidth
           value={input.totalBadDebt}
           id="total-bad-debt"
-          label="Total Bad Debt"
+          label="Bad Debt Count"
           variant="outlined"
           type="number"
           name="totalBadDebt"
           onChange={handleChange}
           placeholder="0"
+          helperText="Enter number of bad debt records (usually 0-20), not amount"
         />
       </div>
       <div className="w-full">
@@ -224,6 +230,7 @@ export default function Form({
           InputProps={{
             inputProps: {
               min: 1,
+              max: 20,
             },
           }}
           fullWidth
